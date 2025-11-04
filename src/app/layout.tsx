@@ -17,7 +17,7 @@ export const metadata: Metadata = {
   title: "PWA NextJS",
   description: "It's a simple progressive web application made with NextJS",
   generator: "Next.js",
-  manifest: "/manifest.json",
+  manifest: "/manifest.ts",
   keywords: ["nextjs", "next14", "pwa", "next-pwa"],
 };
 

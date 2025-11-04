@@ -7,7 +7,13 @@ export default function NoteForm({ onAdd }: { onAdd: () => void }) {
 
   const handleAdd = async () => {
     if (!text.trim()) return;
-    await saveNoteLocally({ text, date: new Date().toISOString() });
+
+    await fetch('/api/notes', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text, date: new Date().toISOString() }),
+    });
+
     setText('');
     onAdd();
   };
