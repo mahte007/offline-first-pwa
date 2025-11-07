@@ -20,7 +20,7 @@ interface Note {
   date: string;
 }
 
-let inMemoryNotes: Note[] = [];
+const inMemoryNotes: Note[] = [];
 
 export async function GET() {
   //await connectDB();
