@@ -1,4 +1,4 @@
-const CACHE_VERSION = "v3";
+const CACHE_VERSION = "v4";
 const CACHE_NAME = `offline-cache-${CACHE_VERSION}`;
 const QUEUE_DB = "offline-queue";
 const OFFLINE_URL = "/offline.html";
@@ -128,6 +128,35 @@ async function openQueue() {
   });
 }
 
+async function resendRequest(req, attempt = 1) {
+  try {
+    const response = await fetch(req.url, {
+      method: req.method,
+      headers: req.headers,
+      body: req.body,
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}`);
+    }
+
+    console.log(`[SW] Synced successfully: ${req.url}`);
+    return true;
+  } catch (err) {
+    console.warn(`[SW] Sync failed (attempt ${attempt}):`, err);
+
+    if (attempt < 5) {
+      const delay = 2000 * attempt; // exponential backoff
+      console.log(`[SW] Retrying in ${delay / 1000}s...`);
+      await new Promise((res) => setTimeout(res, delay));
+      return resendRequest(req, attempt + 1);
+    } else {
+      console.error("[SW] Giving up on sync after 5 attempts");
+      return false;
+    }
+  }
+}
+
 async function sendQueuedRequests() {
   try {
     const db = await openQueue();
@@ -146,16 +175,10 @@ async function sendQueuedRequests() {
     }
 
     for (const req of all) {
-      try {
-        console.log("[SW] Resending queued request:", req.url);
-        await fetch(req.url, {
-          method: req.method,
-          headers: req.headers,
-          body: req.body,
-        });
-      } catch (err) {
-        console.warn("[SW] Failed to resend request:", err);
-        continue; // keep it in queue if it fails again
+      const success = await resendRequest(req);
+      if (!success) {
+        console.warn("[SW] Request failed permanently, keeping it in queue");
+        continue;
       }
     }
 

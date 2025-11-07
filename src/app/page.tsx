@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import NoteForm from '../components/NoteForm';
 import NoteList from '../components/NoteList';
+import ManualSyncButton from '@/components/ManualSyncButton';
 
 export default function Home() {
   const [refresh, setRefresh] = useState(false);
@@ -9,6 +10,7 @@ export default function Home() {
   return (
     <main className="max-w-md mx-auto mt-10 bg-white shadow p-4 rounded">
       <h1 className="text-2xl font-bold mb-4">Offline Jegyzet App (Next.js)</h1>
+      {/* <ManualSyncButton /> */}
       <NoteForm onAdd={() => setRefresh(!refresh)} />
       <NoteList refresh={refresh} />
     </main>
