@@ -2,16 +2,22 @@
 import { openDB } from "idb";
 
 const DB_NAME = "offline-notes-db";
-const STORE_NAME = "notes";
+const NOTES_STORE = "notes";
 const OUTBOX_STORE = "outbox";
 
+export interface Note {
+  id: string;
+  text: string;
+  date: string;
+  synced: boolean;
+}
+
 export async function initDB() {
-  return openDB(DB_NAME, 2, {
+  return openDB(DB_NAME, 3, {
     upgrade(db) {
-      if (!db.objectStoreNames.contains(STORE_NAME)) {
-        db.createObjectStore(STORE_NAME, {
+      if (!db.objectStoreNames.contains(NOTES_STORE)) {
+        db.createObjectStore(NOTES_STORE, {
           keyPath: "id",
-          autoIncrement: true,
         });
       }
       if (!db.objectStoreNames.contains(OUTBOX_STORE)) {
@@ -24,19 +30,30 @@ export async function initDB() {
   });
 }
 
-export async function saveNoteLocally(note: { text: string; date: string }) {
+export async function saveNoteLocally(note: Omit<Note, "synced">) {
   const db = await initDB();
-  await db.add(STORE_NAME, note);
+  const fullNote: Note = { ...note, synced: navigator.onLine };
+  await db.put(NOTES_STORE, fullNote);
 }
 
-export async function getAllNotes() {
+export async function markNoteAsSynced(id: string) {
   const db = await initDB();
-  return db.getAll(STORE_NAME);
+  const note = await db.get(NOTES_STORE, id);
+  if (note) {
+    note.synced = true;
+    await db.put(NOTES_STORE, note);
+  }
+  console.log(note)
+}
+
+export async function getAllNotes(): Promise<Note[]> {
+  const db = await initDB();
+  return db.getAll(NOTES_STORE);
 }
 
 export async function clearNotes() {
   const db = await initDB();
-  await db.clear(STORE_NAME);
+  await db.clear(NOTES_STORE);
 }
 
 export async function addToOutBox(req: any) {

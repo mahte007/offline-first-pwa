@@ -180,6 +180,13 @@ async function sendQueuedRequests() {
         console.warn("[SW] Request failed permanently, keeping it in queue");
         continue;
       }
+      if (success) {
+        self.clients.matchAll().then((clients) => {
+          clients.forEach((client) =>
+            client.postMessage({ type: "NOTE_SYNCED", id: note.id })
+          );
+        });
+      }
     }
 
     // Clear queue after successful resend

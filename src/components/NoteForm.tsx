@@ -14,6 +14,12 @@ export default function NoteForm({ onAdd }: { onAdd: () => void }) {
       body: JSON.stringify({ text, date: new Date().toISOString() }),
     });
 
+    await saveNoteLocally({
+      id: crypto.randomUUID(),
+      text,
+      date: new Date().toISOString(),
+    });
+
     setText('');
     onAdd();
   };
